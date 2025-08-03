@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>魔王九九乘法闖關遊戲</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #fcefd6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #game {
+      width: 480px;
+      margin-top: 20px;
+      background: #fff3d1;
+      border: 5px solid #ffcc70;
+      border-radius: 20px;
+      padding: 10px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    #boss {
+      height: 180px;
+      background: url('boss.png') center/contain no-repeat;
+    }
+    #question {
+      margin: 10px 0;
+      font-size: 24px;
+    }
+    #stage {
+      font-size: 20px;
+      margin: 10px;
+    }
+    #choices {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+    }
+    .choice {
+      background: #fff;
+      padding: 10px 20px;
+      border: 3px solid #ffa;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 24px;
+      transition: 0.2s;
+    }
+    .choice:hover {
+      background-color: #ffeeaa;
+    }
+    #hero {
+      margin-top: 30px;
+      height: 120px;
+      background: url('hero.png') center/contain no-repeat;
+    }
+    #timer {
+      font-size: 32px;
+      color: red;
+      margin-top: 10px;
+    }
+    #gameover {
+      font-size: 28px;
+      color: red;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="game">
+    <div id="stage">第 <span id="level">1</span> 關</div>
+    <div id="boss"></div>
+    <div id="question"></div>
+    <div id="timer"></div>
+    <div id="choices"></div>
+    <div id="hero"></div>
+    <div id="gameover"></div>
+  </div>
+
+  <script>
+    const questionEl = document.getElementById('question');
+    const choicesEl = document.getElementById('choices');
+    const timerEl = document.getElementById('timer');
+    const levelEl = document.getElementById('level');
+    const gameoverEl = document.getElementById('gameover');
+
+    let level = 1;
+    let correctAnswer = 0;
+    let timer;
+    let countdown = 5;
+
+    function speakBoss(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-TW';
+      speechSynthesis.speak(utterance);
+    }
+
+    function getNumberImage(num) {
+      return num.toString().split('').map(d => `<img src="numbers/${d}.png" alt="${d}" style="height:40px;">`).join('');
+    }
+
+    function newQuestion() {
+      countdown = 5;
+      timerEl.innerHTML = getNumberImage(countdown);
+      const a = Math.floor(Math.random() * 9) + 1;
+      const b = Math.floor(Math.random() * 9) + 1;
+      correctAnswer = a * b;
+      questionEl.innerHTML = `${getNumberImage(a)} × ${getNumberImage(b)} = ?`;
+      levelEl.textContent = level;
+      speakBoss(`第${level}關，準備好囉！${countdown}秒內作答！`);
+
+      const answers = new Set();
+      answers.add(correctAnswer);
+      while (answers.size < 3) {
+        let wrong = correctAnswer + Math.floor(Math.random() * 10) - 5;
+        if (wrong !== correctAnswer && wrong > 0) {
+          answers.add(wrong);
+        }
+      }
+
+      const answerList = Array.from(answers);
+      answerList.sort(() => Math.random() - 0.5);
+      choicesEl.innerHTML = '';
+      answerList.forEach(ans => {
+        const div = document.createElement('div');
+        div.className = 'choice';
+        div.innerHTML = getNumberImage(ans);
+        div.onclick = () => checkAnswer(ans);
+        choicesEl.appendChild(div);
+      });
+
+      clearInterval(timer);
+      timer = setInterval(() => {
+        countdown--;
+        if (countdown >= 0) {
+          timerEl.innerHTML = getNumberImage(countdown);
+          speakBoss(`${countdown}`);
+        }
+        if (countdown === 0) {
+          clearInterval(timer);
+          gameOver();
+        }
+      }, 1000);
+    }
+
+    function checkAnswer(ans) {
+      clearInterval(timer);
+      if (ans === correctAnswer) {
+        level++;
+        newQuestion();
+      } else {
+        gameOver();
+      }
+    }
+
+    function gameOver() {
+      gameoverEl.style.display = 'block';
+      gameoverEl.textContent = `遊戲結束！你闖到了第 ${level} 關！`;
+      speakBoss(`你失敗了～只闖到了第 ${level} 關！`);
+      setTimeout(() => location.reload(), 5000);
+    }
+
+    window.onload = () => newQuestion();
+  </script>
+</body>
+</html>
