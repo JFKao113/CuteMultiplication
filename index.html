@@ -4,79 +4,108 @@
   <meta charset="UTF-8" />
   <title>魔王九九乘法闖關遊戲</title>
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
       font-family: sans-serif;
-      background: #fcefd6;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      background: #f0eac0;
     }
+
     #game {
       width: 480px;
-      margin-top: 20px;
-      background: #fff3d1;
+      height: 700px;
+      margin: 20px auto;
+      background: url('background.jpg') no-repeat center center;
+      background-size: cover;
       border: 5px solid #ffcc70;
       border-radius: 20px;
       padding: 10px;
       text-align: center;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
+
+    #top-half, #bottom-half {
+      flex: none;
+    }
+
+    #top-half {
+      padding-top: 10px;
+    }
+
     #boss {
-      height: 180px;
+      height: 240px;
       background: url('boss.png') center/contain no-repeat;
+      margin-bottom: 10px;
     }
+
     #question {
       margin: 10px 0;
-      font-size: 24px;
+      font-size: 28px;
     }
+
     #stage {
-      font-size: 20px;
+      font-size: 22px;
       margin: 10px;
     }
+
     #choices {
       display: flex;
       justify-content: space-around;
-      margin-top: 20px;
+      margin: 10px 0;
     }
+
     .choice {
       background: #fff;
       padding: 10px 20px;
       border: 3px solid #ffa;
       border-radius: 15px;
       cursor: pointer;
-      font-size: 24px;
+      font-size: 26px;
       transition: 0.2s;
     }
+
     .choice:hover {
       background-color: #ffeeaa;
     }
+
     #hero {
-      margin-top: 30px;
-      height: 120px;
+      margin-top: 5px;
+      height: 160px;
       background: url('hero.png') center/contain no-repeat;
     }
+
     #timer {
       font-size: 32px;
       color: red;
-      margin-top: 10px;
+      margin-top: 5px;
     }
+
     #gameover {
-      font-size: 28px;
+      font-size: 24px;
       color: red;
       display: none;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
   <div id="game">
-    <div id="stage">第 <span id="level">1</span> 關</div>
-    <div id="boss"></div>
-    <div id="question"></div>
-    <div id="timer"></div>
-    <div id="choices"></div>
-    <div id="hero"></div>
-    <div id="gameover"></div>
+    <div id="top-half">
+      <div id="stage">第 <span id="level">1</span> 關</div>
+      <div id="boss"></div>
+      <div id="question"></div>
+      <div id="timer"></div>
+    </div>
+    <div id="bottom-half">
+      <div id="choices"></div>
+      <div id="hero"></div>
+      <div id="gameover"></div>
+    </div>
   </div>
 
   <script>
@@ -98,7 +127,7 @@
     }
 
     function getNumberImage(num) {
-      return num.toString().split('').map(d => `<img src="numbers/${d}.png" alt="${d}" style="height:40px;">`).join('');
+      return num.toString().split('').map(d => `<img src="numbers/${d}.png" alt="${d}" style="height:60px;">`).join('');
     }
 
     function newQuestion() {
@@ -109,7 +138,8 @@
       correctAnswer = a * b;
       questionEl.innerHTML = `${getNumberImage(a)} × ${getNumberImage(b)} = ?`;
       levelEl.textContent = level;
-      speakBoss(`第${level}關，準備好囉！${countdown}秒內作答！`);
+
+      speakBoss(`第${level}關，準備好囉！請在${countdown}秒內作答！`);
 
       const answers = new Set();
       answers.add(correctAnswer);
@@ -136,7 +166,6 @@
         countdown--;
         if (countdown >= 0) {
           timerEl.innerHTML = getNumberImage(countdown);
-          speakBoss(`${countdown}`);
         }
         if (countdown === 0) {
           clearInterval(timer);
