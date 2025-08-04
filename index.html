@@ -119,11 +119,15 @@
     let correctAnswer = 0;
     let timer;
     let countdown = 5;
+    let currentUtterance;
 
     function speakBoss(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'zh-TW';
-      speechSynthesis.speak(utterance);
+      if (speechSynthesis.speaking) {
+        speechSynthesis.cancel();
+      }
+      currentUtterance = new SpeechSynthesisUtterance(text);
+      currentUtterance.lang = 'zh-TW';
+      speechSynthesis.speak(currentUtterance);
     }
 
     function getNumberImage(num) {
@@ -176,6 +180,9 @@
 
     function checkAnswer(ans) {
       clearInterval(timer);
+      if (speechSynthesis.speaking) {
+        speechSynthesis.cancel();
+      }
       if (ans === correctAnswer) {
         level++;
         newQuestion();
