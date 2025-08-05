@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -138,10 +137,12 @@
     let correctAnswer = 0;
     let timer;
     let countdown = 5;
+    let isGameOver = false;
 
     startBtn.onclick = () => {
       startBtn.style.display = 'none';
       gameContainer.style.display = 'flex';
+      isGameOver = false;
       newQuestion();
     };
 
@@ -149,13 +150,14 @@
       restartBtn.style.display = 'none';
       gameoverEl.style.display = 'none';
       level = 1;
+      isGameOver = false;
       newQuestion();
     };
 
     function speakBoss(text) {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'zh-TW';
-      speechSynthesis.cancel(); // 防止重疊
+      speechSynthesis.cancel();
       speechSynthesis.speak(utterance);
     }
 
@@ -208,6 +210,7 @@
     }
 
     function checkAnswer(ans) {
+      if (isGameOver) return;
       clearInterval(timer);
       speechSynthesis.cancel();
       if (ans === correctAnswer) {
@@ -219,6 +222,7 @@
     }
 
     function gameOver() {
+      isGameOver = true;
       gameoverEl.style.display = 'block';
       gameoverEl.textContent = `遊戲結束！你闖到了第 ${level} 關！`;
       speakBoss(`你失敗了～只闖到了第 ${level} 關！`);
