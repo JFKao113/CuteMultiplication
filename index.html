@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <title>魔王九九乘法闖關遊戲</title>
-  <style>
+<meta charset="utf-8"/>
+<title>魔王九九乘法闖關遊戲</title>
+<style>
     html, body {
       margin: 0;
       padding: 0;
@@ -104,130 +105,140 @@
   </style>
 </head>
 <body>
-  <div style="text-align:center">
-    <button id="start-button">開始遊戲</button>
-  </div>
+<div style="text-align:center">
+<label for="difficulty">選擇難度：</label>
+<select id="difficulty">
+<option selected="" value="5">困難</option>
+<option value="10">中等</option>
+<option value="15">簡單</option>
+</select><br/><br/>
+<button id="start-button">開始遊戲</button>
+</div>
+<div id="game">
+<div id="top-half">
+<div id="stage">第 <span id="level">1</span> 關</div>
+<div id="boss"></div>
+<div id="question"></div>
+<div id="timer"></div>
+</div>
+<div id="bottom-half">
+<div id="choices"></div>
+<div id="hero"></div>
+<div id="gameover"></div>
+<button id="restart-button" style="display:none;">重新開始</button>
+</div>
+</div>
+<script>
+const questionEl = document.getElementById('question');
+const choicesEl = document.getElementById('choices');
+const timerEl = document.getElementById('timer');
+const levelEl = document.getElementById('level');
+const gameoverEl = document.getElementById('gameover');
+const startBtn = document.getElementById('start-button');
+const restartBtn = document.getElementById('restart-button');
+const gameContainer = document.getElementById('game');
+const difficultySelect = document.getElementById('difficulty');
 
-  <div id="game">
-    <div id="top-half">
-      <div id="stage">第 <span id="level">1</span> 關</div>
-      <div id="boss"></div>
-      <div id="question"></div>
-      <div id="timer"></div>
-    </div>
-    <div id="bottom-half">
-      <div id="choices"></div>
-      <div id="hero"></div>
-      <div id="gameover"></div>
-      <button id="restart-button" style="display:none;">重新開始</button>
-    </div>
-  </div>
+let level = 1;
+let correctAnswer = 0;
+let timer;
+let countdown = 5;
+let baseCountdown = 5;
+let isGameOver = false;
 
-  <script>
-    const questionEl = document.getElementById('question');
-    const choicesEl = document.getElementById('choices');
-    const timerEl = document.getElementById('timer');
-    const levelEl = document.getElementById('level');
-    const gameoverEl = document.getElementById('gameover');
-    const startBtn = document.getElementById('start-button');
-    const restartBtn = document.getElementById('restart-button');
-    const gameContainer = document.getElementById('game');
+startBtn.addEventListener("click", function () {
+  baseCountdown = parseInt(difficultySelect.value);
+  countdown = baseCountdown;
+  startBtn.style.display = 'none';
+  gameContainer.style.display = 'flex';
+  isGameOver = false;
+  newQuestion();
+});
 
-    let level = 1;
-    let correctAnswer = 0;
-    let timer;
-    let countdown = 5;
-    let isGameOver = false;
+restartBtn.addEventListener("click", function () {
+  baseCountdown = parseInt(difficultySelect.value);
+  countdown = baseCountdown;
+  restartBtn.style.display = 'none';
+  gameoverEl.style.display = 'none';
+  level = 1;
+  isGameOver = false;
+  newQuestion();
+});
 
-    startBtn.onclick = () => {
-      startBtn.style.display = 'none';
-      gameContainer.style.display = 'flex';
-      isGameOver = false;
-      newQuestion();
-    };
+function speakBoss(text) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'zh-TW';
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utterance);
+}
 
-    restartBtn.onclick = () => {
-      restartBtn.style.display = 'none';
-      gameoverEl.style.display = 'none';
-      level = 1;
-      isGameOver = false;
-      newQuestion();
-    };
+function getNumberImage(num) {
+  return num.toString().split('').map(d => `<img src="numbers/${d}.png" alt="${d}" style="height:60px;">`).join('');
+}
 
-    function speakBoss(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'zh-TW';
-      speechSynthesis.cancel();
-      speechSynthesis.speak(utterance);
+function newQuestion() {
+  countdown = baseCountdown;
+  timerEl.innerHTML = getNumberImage(countdown);
+  const a = Math.floor(Math.random() * 9) + 1;
+  const b = Math.floor(Math.random() * 9) + 1;
+  correctAnswer = a * b;
+  questionEl.innerHTML = `${getNumberImage(a)} × ${getNumberImage(b)} = ?`;
+  levelEl.textContent = level;
+
+  speakBoss(`第${level}關，準備好囉！請在${countdown}秒內作答！`);
+
+  const answers = new Set();
+  answers.add(correctAnswer);
+  while (answers.size < 3) {
+    let wrong = correctAnswer + Math.floor(Math.random() * 10) - 5;
+    if (wrong !== correctAnswer && wrong > 0) {
+      answers.add(wrong);
     }
+  }
 
-    function getNumberImage(num) {
-      return num.toString().split('').map(d => `<img src="numbers/${d}.png" alt="${d}" style="height:60px;">`).join('');
-    }
+  const answerList = Array.from(answers);
+  answerList.sort(() => Math.random() - 0.5);
+  choicesEl.innerHTML = '';
+  answerList.forEach(ans => {
+    const div = document.createElement('div');
+    div.className = 'choice';
+    div.innerHTML = getNumberImage(ans);
+    div.onclick = () => checkAnswer(ans);
+    choicesEl.appendChild(div);
+  });
 
-    function newQuestion() {
-      countdown = 5;
+  clearInterval(timer);
+  timer = setInterval(() => {
+    countdown--;
+    if (countdown >= 0) {
       timerEl.innerHTML = getNumberImage(countdown);
-      const a = Math.floor(Math.random() * 9) + 1;
-      const b = Math.floor(Math.random() * 9) + 1;
-      correctAnswer = a * b;
-      questionEl.innerHTML = `${getNumberImage(a)} × ${getNumberImage(b)} = ?`;
-      levelEl.textContent = level;
-
-      speakBoss(`第${level}關，準備好囉！請在${countdown}秒內作答！`);
-
-      const answers = new Set();
-      answers.add(correctAnswer);
-      while (answers.size < 3) {
-        let wrong = correctAnswer + Math.floor(Math.random() * 10) - 5;
-        if (wrong !== correctAnswer && wrong > 0) {
-          answers.add(wrong);
-        }
-      }
-
-      const answerList = Array.from(answers);
-      answerList.sort(() => Math.random() - 0.5);
-      choicesEl.innerHTML = '';
-      answerList.forEach(ans => {
-        const div = document.createElement('div');
-        div.className = 'choice';
-        div.innerHTML = getNumberImage(ans);
-        div.onclick = () => checkAnswer(ans);
-        choicesEl.appendChild(div);
-      });
-
+    }
+    if (countdown === 0) {
       clearInterval(timer);
-      timer = setInterval(() => {
-        countdown--;
-        if (countdown >= 0) {
-          timerEl.innerHTML = getNumberImage(countdown);
-        }
-        if (countdown === 0) {
-          clearInterval(timer);
-          gameOver();
-        }
-      }, 1000);
+      gameOver();
     }
+  }, 1000);
+}
 
-    function checkAnswer(ans) {
-      if (isGameOver) return;
-      clearInterval(timer);
-      speechSynthesis.cancel();
-      if (ans === correctAnswer) {
-        level++;
-        newQuestion();
-      } else {
-        gameOver();
-      }
-    }
+function checkAnswer(ans) {
+  if (isGameOver) return;
+  clearInterval(timer);
+  speechSynthesis.cancel();
+  if (ans === correctAnswer) {
+    level++;
+    newQuestion();
+  } else {
+    gameOver();
+  }
+}
 
-    function gameOver() {
-      isGameOver = true;
-      gameoverEl.style.display = 'block';
-      gameoverEl.textContent = `遊戲結束！你闖到了第 ${level} 關！`;
-      speakBoss(`你失敗了～只闖到了第 ${level} 關！`);
-      restartBtn.style.display = 'inline-block';
-    }
-  </script>
+function gameOver() {
+  isGameOver = true;
+  gameoverEl.style.display = 'block';
+  gameoverEl.textContent = `遊戲結束！你闖到了第 ${level} 關！`;
+  speakBoss(`你失敗了～只闖到了第 ${level} 關！`);
+  restartBtn.style.display = 'inline-block';
+}
+</script>
 </body>
 </html>
