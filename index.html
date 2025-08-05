@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -24,7 +25,7 @@
       padding: 10px;
       text-align: center;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      display: flex;
+      display: none;
       flex-direction: column;
       justify-content: space-between;
     }
@@ -91,9 +92,23 @@
       display: none;
       margin-top: 10px;
     }
+
+    #start-button, #restart-button {
+      background-color: #ffcc70;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-size: 24px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
+  <div style="text-align:center">
+    <button id="start-button">開始遊戲</button>
+  </div>
+
   <div id="game">
     <div id="top-half">
       <div id="stage">第 <span id="level">1</span> 關</div>
@@ -105,6 +120,7 @@
       <div id="choices"></div>
       <div id="hero"></div>
       <div id="gameover"></div>
+      <button id="restart-button" style="display:none;">重新開始</button>
     </div>
   </div>
 
@@ -114,20 +130,33 @@
     const timerEl = document.getElementById('timer');
     const levelEl = document.getElementById('level');
     const gameoverEl = document.getElementById('gameover');
+    const startBtn = document.getElementById('start-button');
+    const restartBtn = document.getElementById('restart-button');
+    const gameContainer = document.getElementById('game');
 
     let level = 1;
     let correctAnswer = 0;
     let timer;
     let countdown = 5;
-    let currentUtterance;
+
+    startBtn.onclick = () => {
+      startBtn.style.display = 'none';
+      gameContainer.style.display = 'flex';
+      newQuestion();
+    };
+
+    restartBtn.onclick = () => {
+      restartBtn.style.display = 'none';
+      gameoverEl.style.display = 'none';
+      level = 1;
+      newQuestion();
+    };
 
     function speakBoss(text) {
-      if (speechSynthesis.speaking) {
-        speechSynthesis.cancel();
-      }
-      currentUtterance = new SpeechSynthesisUtterance(text);
-      currentUtterance.lang = 'zh-TW';
-      speechSynthesis.speak(currentUtterance);
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-TW';
+      speechSynthesis.cancel(); // 防止重疊
+      speechSynthesis.speak(utterance);
     }
 
     function getNumberImage(num) {
@@ -180,9 +209,7 @@
 
     function checkAnswer(ans) {
       clearInterval(timer);
-      if (speechSynthesis.speaking) {
-        speechSynthesis.cancel();
-      }
+      speechSynthesis.cancel();
       if (ans === correctAnswer) {
         level++;
         newQuestion();
@@ -195,10 +222,8 @@
       gameoverEl.style.display = 'block';
       gameoverEl.textContent = `遊戲結束！你闖到了第 ${level} 關！`;
       speakBoss(`你失敗了～只闖到了第 ${level} 關！`);
-      setTimeout(() => location.reload(), 5000);
+      restartBtn.style.display = 'inline-block';
     }
-
-    window.onload = () => newQuestion();
   </script>
 </body>
 </html>
